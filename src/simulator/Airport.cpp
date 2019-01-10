@@ -123,8 +123,6 @@ Airport::generate_storm()
 void
 Airport::generate_flight()
 {
-
-
 	std::cerr<<"Generate new flight";
 	float angle, x, y, z;
 	float bear, inc;
@@ -150,6 +148,7 @@ Airport::generate_flight()
 	if(flights.size() == 1)
 		NextFocus();
 	std::cerr<<"]"<<std::endl;
+
 }
 
 void
@@ -247,9 +246,6 @@ Airport::step()
 		pthread_mutex_unlock (&mutex);
 	}
 
-
-
-
 }
 
 
@@ -264,11 +260,22 @@ Airport::removeFlight(std::string id)
 	{
 		if((*it)->getId().compare(id) == 0)
 		{
+			// Liberamos pista si el avión está aterrizando
+			if(it == flights.begin())
+			{
+				any_landing_ = false;
+			}
+
 			if((*it)==(*focus))
 			{
 				delete(*it);
 				focus = flights.erase(it);
 				(*focus)->setFocused(true);
+				// Si solo queda un vuelo, llamamos a NextFocus despues de borrar el vuelo
+				if(flights.size() == 1)
+				{
+					NextFocus();
+				}
 				return focus;
 			}else
 			{
@@ -280,7 +287,6 @@ Airport::removeFlight(std::string id)
 		it++;
 	}
 	return flights.begin();
-
 }
 
 void
@@ -289,7 +295,7 @@ Airport::checkCollisions()
 	if(flights.empty()) return;
 
 	std::list<Flight*>::iterator i,j;
-	bool removed = false;
+	//bool removed = false;
 
 
 	i =  flights.begin();
@@ -308,6 +314,7 @@ Airport::checkCollisions()
 				i = removeFlight((*i)->getId());
 				j = removeFlight((*j)->getId());
 				points += COLLISION_POINTS;
+
 				return; //Avoid not valid iterator. Only one collision per cycle
 			}
 			j++;
@@ -344,7 +351,6 @@ Airport::checkFlightsInStorm()
 
 
 		//std::cerr<<"["<<(*it)->getId()<<" = "<<dist<<" < "<<storm->getRadious()<<std::endl;
-
 
 	}
 }
@@ -391,7 +397,6 @@ Airport::checkLandings()
 
 	while(it != flights.end())
 	{
-
 		if((final_pos.distance((*it)->getPosition()) < LANDING_DIST) &&
 				(toDegrees(normalizePi(fabs((*it)->getBearing() - toRadians(LANDING_BEAR))))<LANDING_BEAR_MAX_ERROR) &&
 				((*it)->getSpeed()<LANDING_SPEED))
@@ -404,7 +409,7 @@ Airport::checkLandings()
 
 			std::cerr<<"*";
 
-      any_landing_ = false;
+      //any_landing_ = false;
 
 
 			return;
